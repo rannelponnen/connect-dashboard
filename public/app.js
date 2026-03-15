@@ -4,10 +4,10 @@
 
 // ── CONFIG ──────────────────────────────────
 const EVENTS = {
-  OHEC: { label: 'Oman Health Exhibition', sheetPrefix: 'OHEC', color: '#1C4488' },
   ODBW: { label: 'Oman Design & Build Week', sheetPrefix: 'ODBW', color: '#2a7ab5' },
-  OPES: { label: 'Oman Petroleum & Energy Show', sheetPrefix: 'OPES', color: '#0d6e4e' },
   OSW:  { label: 'Oman Sustainability Week', sheetPrefix: 'OSW',  color: '#5cc98a' },
+  OPES: { label: 'Oman Petroleum & Energy Show', sheetPrefix: 'OPES', color: '#0d6e4e' },
+  OHEC: { label: 'Oman Health Exhibition', sheetPrefix: 'OHEC', color: '#1C4488' },
 };
 
 const CHART_COLORS = {
@@ -59,8 +59,8 @@ const CHANNEL_COLS = {
 const charts = {};
 let cachedData = {};
 let activeTab = 'overview';
-let regActiveEvent = 'OHEC';
-let budgetActiveEvent = 'OHEC';
+let regActiveEvent = 'ODBW';
+let budgetActiveEvent = 'ODBW';
 let activePlatform = 'LinkedIn';
 let emailData = null;
 let socialData = null;
