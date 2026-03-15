@@ -83,7 +83,11 @@ function clearCache() {
 
 // ── HELPERS ──────────────────────────────────
 function num(v) {
-  const n = parseFloat(v);
+  if (v === null || v === undefined || v === '') return 0;
+  if (typeof v === 'number') return isNaN(v) ? 0 : v;
+  // Strip commas and leading currency/text (e.g. "OMR400.00", "6,677", "35%")
+  const cleaned = String(v).replace(/,/g, '').replace(/^[^0-9\-.]+/, '').replace(/[^0-9.]+$/, '');
+  const n = parseFloat(cleaned);
   return isNaN(n) ? 0 : n;
 }
 
@@ -105,7 +109,7 @@ function fmtDate(v) {
 function fmtCurrency(v) {
   const n = num(v);
   if (n === 0) return '—';
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return 'OMR ' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 function ratePill(rate) {
