@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CONNECT Events — Marketing Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ── SIDEBAR (desktop) ── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="brand-name">CONNECT</span>
+      <span class="brand-sub">Marketing Dashboard</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-tab="overview">
+        <span class="nav-icon">📊</span> Overview
+      </div>
+      <div class="nav-item" data-tab="registration">
+        <span class="nav-icon">📈</span> Registration
+      </div>
+      <div class="nav-item" data-tab="email">
+        <span class="nav-icon">📧</span> Email
+      </div>
+      <div class="nav-item" data-tab="social">
+        <span class="nav-icon">📱</span> Social Media
+      </div>
+      <div class="nav-item" data-tab="budget">
+        <span class="nav-icon">💰</span> Budget & CPA
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      Powered by Google Sheets
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <div class="main-content">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <h1 id="page-title">Overview</h1>
+      <div class="top-bar-right">
+        <span class="last-updated" id="last-updated">Loading data…</span>
+        <button class="refresh-btn" id="refresh-btn">
+          ↻ Refresh
+        </button>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ══════════════════════════════════
+           TAB 1: OVERVIEW
+      ══════════════════════════════════ -->
+      <section id="tab-overview" class="tab-section active">
+        <div id="overview-loading" class="loading-overlay">
+          <div class="spinner"></div> Loading event data…
+        </div>
+        <div id="overview-error" class="error-msg" style="display:none"></div>
+
+        <!-- Event KPI cards -->
+        <div id="event-grid" class="event-grid"></div>
+
+        <!-- Summary stat cards -->
+        <div id="summary-cards" class="card-grid"></div>
+      </section>
+
+      <!-- ══════════════════════════════════
+           TAB 2: REGISTRATION TRACKER
+      ══════════════════════════════════ -->
+      <section id="tab-registration" class="tab-section">
+        <div class="section-header">
+          <h2>Registration Tracker</h2>
+          <div class="event-selector" id="reg-event-selector">
+            <button class="event-btn active" data-event="OHEC">OHEC</button>
+            <button class="event-btn" data-event="ODBW">ODBW</button>
+            <button class="event-btn" data-event="OPES">OPES</button>
+            <button class="event-btn" data-event="OSW">OSW</button>
+          </div>
+        </div>
+
+        <div id="reg-loading" class="loading-overlay" style="display:none">
+          <div class="spinner"></div> Loading registration data…
+        </div>
+        <div id="reg-error" class="error-msg" style="display:none"></div>
+
+        <div class="chart-card">
+          <h3>Cumulative Registrations — Actual vs Target</h3>
+          <div class="chart-wrap tall">
+            <canvas id="reg-line-chart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Weekly Registrations by Channel</h3>
+          <div class="chart-wrap">
+            <canvas id="reg-channel-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════
+           TAB 3: EMAIL PERFORMANCE
+      ══════════════════════════════════ -->
+      <section id="tab-email" class="tab-section">
+        <div class="section-header">
+          <h2>Email Performance</h2>
+          <select class="filter-select" id="email-event-filter">
+            <option value="">All Events</option>
+            <option value="OHEC">OHEC</option>
+            <option value="ODBW">ODBW</option>
+            <option value="OPES">OPES</option>
+            <option value="OSW">OSW</option>
+          </select>
+        </div>
+
+        <div id="email-loading" class="loading-overlay" style="display:none">
+          <div class="spinner"></div> Loading email data…
+        </div>
+        <div id="email-error" class="error-msg" style="display:none"></div>
+
+        <!-- Summary stat cards -->
+        <div id="email-stat-cards" class="card-grid"></div>
+
+        <!-- Chart row -->
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <h3>Avg Open Rate by Event</h3>
+            <div class="chart-wrap short">
+              <canvas id="email-open-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Avg Click Rate by Event</h3>
+            <div class="chart-wrap short">
+              <canvas id="email-click-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campaigns table -->
+        <div class="table-wrap">
+          <table class="data-table" id="email-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Event</th>
+                <th>Subject Line</th>
+                <th>Type</th>
+                <th>Open Rate</th>
+                <th>Click Rate</th>
+                <th>CTR</th>
+              </tr>
+            </thead>
+            <tbody id="email-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════
+           TAB 4: SOCIAL MEDIA
+      ══════════════════════════════════ -->
+      <section id="tab-social" class="tab-section">
+        <div class="section-header">
+          <h2>Social Media</h2>
+        </div>
+
+        <div id="social-loading" class="loading-overlay" style="display:none">
+          <div class="spinner"></div> Loading social data…
+        </div>
+        <div id="social-error" class="error-msg" style="display:none"></div>
+
+        <!-- Platform tabs -->
+        <div class="platform-tabs">
+          <div class="platform-tab active" data-platform="LinkedIn">LinkedIn</div>
+          <div class="platform-tab" data-platform="Facebook">Facebook</div>
+        </div>
+
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <h3>Follower Growth</h3>
+            <div class="chart-wrap">
+              <canvas id="social-followers-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Monthly Impressions</h3>
+            <div class="chart-wrap">
+              <canvas id="social-impressions-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <h3>Interactions</h3>
+          <div class="chart-wrap short">
+            <canvas id="social-interactions-chart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════
+           TAB 5: BUDGET & CPA
+      ══════════════════════════════════ -->
+      <section id="tab-budget" class="tab-section">
+        <div class="section-header">
+          <h2>Budget & Cost Per Acquisition</h2>
+          <div class="event-selector" id="budget-event-selector">
+            <button class="event-btn active" data-event="OHEC">OHEC</button>
+            <button class="event-btn" data-event="ODBW">ODBW</button>
+            <button class="event-btn" data-event="OPES">OPES</button>
+            <button class="event-btn" data-event="OSW">OSW</button>
+          </div>
+        </div>
+
+        <div id="budget-loading" class="loading-overlay" style="display:none">
+          <div class="spinner"></div> Loading budget data…
+        </div>
+        <div id="budget-error" class="error-msg" style="display:none"></div>
+
+        <div id="budget-year-selector" class="event-selector mb-4" style="margin-bottom:16px"></div>
+
+        <div class="chart-grid-2">
+          <div class="chart-card">
+            <h3>Registrations by Channel — Predicted vs Actual</h3>
+            <div class="chart-wrap tall">
+              <canvas id="budget-reg-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Cost Per Acquisition by Channel</h3>
+            <div class="chart-wrap tall">
+              <canvas id="budget-cpa-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table" id="budget-table">
+            <thead>
+              <tr>
+                <th>Channel</th>
+                <th>Budget</th>
+                <th>Predicted Reg</th>
+                <th>Actual Reg</th>
+                <th>Predicted CPA</th>
+                <th>Actual CPA</th>
+              </tr>
+            </thead>
+            <tbody id="budget-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
+</div><!-- /app-wrapper -->
+
+<!-- ── BOTTOM NAV (mobile) ── -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-item active" data-tab="overview">
+    <span class="nav-icon">📊</span>Overview
+  </div>
+  <div class="bottom-nav-item" data-tab="registration">
+    <span class="nav-icon">📈</span>Reg
+  </div>
+  <div class="bottom-nav-item" data-tab="email">
+    <span class="nav-icon">📧</span>Email
+  </div>
+  <div class="bottom-nav-item" data-tab="social">
+    <span class="nav-icon">📱</span>Social
+  </div>
+  <div class="bottom-nav-item" data-tab="budget">
+    <span class="nav-icon">💰</span>Budget
+  </div>
+</nav>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

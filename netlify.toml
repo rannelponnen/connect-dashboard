@@ -1,0 +1,13 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "echo 'No build step needed'"
+
+[dev]
+  port = 8888
+  targetPort = 3000
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
