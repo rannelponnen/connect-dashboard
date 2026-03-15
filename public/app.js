@@ -202,85 +202,94 @@ async function loadOverview() {
   grid.innerHTML = '';
   summaryCards.innerHTML = '';
 
+  async function getYearData(key, year) {
+    try {
+      const rows = await loadWeeklyTracker(key, year);
+      const latest = getLatestDataRow(rows);
+      return { latest, weeksToGo: num(latest[0]), actual: num(latest[7]), target: num(latest[5]) };
+    } catch {
+      return null;
+    }
+  }
+
   try {
     const results = await Promise.allSettled(
       Object.keys(EVENTS).map(async (key) => {
-        try {
-          const rows = await loadWeeklyTracker(key);
-          const latest = getLatestDataRow(rows);
-          const onsite = rows.find(r => String(r[0]) === '-1' || String(r[2]) === 'ONSITE');
-          return { key, rows, latest, onsite };
-        } catch {
-          // Try 2024 fallback
-          const rows = await loadWeeklyTracker(key, '2024');
-          const latest = getLatestDataRow(rows);
-          return { key, rows, latest, onsite: null, year: '2024' };
-        }
+        const [d25, d26] = await Promise.all([getYearData(key, '2025'), getYearData(key, '2026')]);
+        return { key, d25, d26 };
       })
     );
 
-    let totalTarget = 0, totalActual = 0;
+    let total26Target = 0, total26Actual = 0, total25Actual = 0;
 
     results.forEach(result => {
       if (result.status !== 'fulfilled') return;
-      const { key, latest, onsite, year } = result.value;
+      const { key, d25, d26 } = result.value;
       const event = EVENTS[key];
-      const target = num(latest[5]);
-      const actual = num(latest[7]);
-      const weeksToGo = num(latest[0]);
-      const pctToTarget = target > 0 ? Math.min((actual / target) * 100, 150) : 0;
-      const onSiteTotal = onsite ? num(onsite[3]) : 0;
 
-      totalTarget += target;
-      totalActual += actual;
+      // Use 2026 for progress bar; fall back to 2025 if no 2026
+      const primary = d26 || d25;
+      if (!primary) return;
+
+      const weeksToGo = primary.weeksToGo;
+      const pct26 = d26 && d26.target > 0 ? Math.min((d26.actual / d26.target) * 100, 150) : 0;
+      const pct25 = d25 && d25.target > 0 ? ((d25.actual / d25.target) * 100).toFixed(1) : null;
+
+      if (d26) { total26Target += d26.target; total26Actual += d26.actual; }
+      if (d25) { total25Actual += d25.actual; }
+
+      const weeksLabel = weeksToGo > 0 ? weeksToGo + ' wks' : weeksToGo === 0 ? 'This week' : 'Complete';
 
       const card = document.createElement('div');
       card.className = 'event-card';
       card.innerHTML = `
         <div class="event-card-header">
-          <h3>${key} ${year || '2025'}<br><small style="font-weight:400;font-size:0.72rem;opacity:0.8">${event.label}</small></h3>
-          <span class="weeks-badge">${weeksToGo > 0 ? weeksToGo + ' wks' : weeksToGo === 0 ? 'This week' : 'Complete'}</span>
+          <h3>${key}<br><small style="font-weight:400;font-size:0.72rem;opacity:0.8">${event.label}</small></h3>
+          <span class="weeks-badge">${weeksLabel}</span>
         </div>
         <div class="event-card-body">
-          <div class="reg-row">
-            <div class="reg-stat">
-              <div class="reg-stat-val actual">${fmtNum(actual)}</div>
-              <div class="reg-stat-label">Actual Reg</div>
+          <div class="reg-row" style="justify-content:space-around">
+            <div class="reg-stat" style="text-align:center">
+              <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);font-family:var(--font-heading);margin-bottom:4px">2026</div>
+              <div class="reg-stat-val actual">${d26 ? fmtNum(d26.actual) : '—'}</div>
+              <div class="reg-stat-label">Actual</div>
+              <div style="font-size:0.82rem;color:var(--navy);font-weight:700;margin-top:2px">${d26 ? fmtNum(d26.target) : '—'} <span style="font-weight:400;color:var(--gray-mid)">tgt</span></div>
             </div>
-            <div class="reg-stat">
-              <div class="reg-stat-val">${fmtNum(target)}</div>
-              <div class="reg-stat-label">Target</div>
+            <div style="width:1px;background:var(--gray-light);margin:0 4px"></div>
+            <div class="reg-stat" style="text-align:center">
+              <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-mid);font-family:var(--font-heading);margin-bottom:4px">2025</div>
+              <div class="reg-stat-val" style="font-size:1.2rem;color:var(--gray-text)">${d25 ? fmtNum(d25.actual) : '—'}</div>
+              <div class="reg-stat-label">Actual</div>
+              <div style="font-size:0.82rem;color:var(--navy);font-weight:700;margin-top:2px">${d25 ? fmtNum(d25.target) : '—'} <span style="font-weight:400;color:var(--gray-mid)">tgt</span></div>
             </div>
-            ${onSiteTotal > 0 ? `<div class="reg-stat">
-              <div class="reg-stat-val" style="font-size:1.1rem">${fmtNum(onSiteTotal)}</div>
-              <div class="reg-stat-label">2024 Actual</div>
-            </div>` : ''}
           </div>
-          <div class="progress-bar-wrap">
-            <div class="progress-bar-fill" style="width:${Math.min(pctToTarget, 100)}%"></div>
+          ${d26 ? `
+          <div class="progress-bar-wrap" style="margin-top:10px">
+            <div class="progress-bar-fill" style="width:${Math.min(pct26, 100)}%"></div>
           </div>
-          <div class="pct-label">${pctToTarget.toFixed(1)}% to target</div>
+          <div class="pct-label">${pct26.toFixed(1)}% to 2026 target${pct25 ? ` · 2025: ${pct25}%` : ''}</div>
+          ` : `<div class="pct-label" style="margin-top:8px">2026 data not yet available${pct25 ? ` · 2025: ${pct25}%` : ''}</div>`}
         </div>
       `;
       grid.appendChild(card);
     });
 
-    // Summary cards
-    const overallPct = totalTarget > 0 ? ((totalActual / totalTarget) * 100).toFixed(1) : 0;
+    // Summary cards — 2026 totals with 2025 comparison
+    const overall26Pct = total26Target > 0 ? ((total26Actual / total26Target) * 100).toFixed(1) : 0;
     summaryCards.innerHTML = `
       <div class="card">
-        <div class="card-label">Total Registrations</div>
-        <div class="card-value mint">${fmtNum(totalActual)}</div>
-        <div class="card-sub">Across all active events</div>
+        <div class="card-label">2026 Registrations</div>
+        <div class="card-value mint">${fmtNum(total26Actual)}</div>
+        <div class="card-sub">vs 2025: ${fmtNum(total25Actual)} actual</div>
       </div>
       <div class="card">
-        <div class="card-label">Total Target</div>
-        <div class="card-value">${fmtNum(totalTarget)}</div>
-        <div class="card-sub">Combined event targets</div>
+        <div class="card-label">2026 Target</div>
+        <div class="card-value">${fmtNum(total26Target)}</div>
+        <div class="card-sub">Combined across all events</div>
       </div>
       <div class="card">
-        <div class="card-label">Overall % to Target</div>
-        <div class="card-value ${overallPct >= 80 ? 'mint' : overallPct >= 50 ? '' : 'warn'}">${overallPct}%</div>
+        <div class="card-label">2026 % to Target</div>
+        <div class="card-value ${overall26Pct >= 80 ? 'mint' : overall26Pct >= 50 ? '' : 'warn'}">${overall26Pct}%</div>
         <div class="card-sub">All events combined</div>
       </div>
     `;
