@@ -19,7 +19,7 @@ exports.handler = async (event) => {
     };
   }
 
-  const encodedRange = encodeURIComponent(`${sheet}!${range}`);
+  const encodedRange = encodeURIComponent(`'${sheet}'!${range}`);
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?key=${apiKey}`;
 
   try {

@@ -21,6 +21,19 @@ const CHART_COLORS = {
   gray:    '#b0b0c0',
 };
 
+// RegBudg Calc sheet names (some have typos/spaces in the Google Sheet)
+const REGBUDG_SHEET_NAMES = {
+  'OHEC|2024': 'OHEC 2024 - RegBudg Calc',
+  'OHEC|2025': null, // does not exist in spreadsheet
+  'OHEC|2026': ' OHEC 2026 - RegBudg Calc', // leading space in actual sheet tab
+};
+
+function getBudgetSheetName(eventKey, year) {
+  const key = `${eventKey}|${year}`;
+  if (REGBUDG_SHEET_NAMES[key] !== undefined) return REGBUDG_SHEET_NAMES[key];
+  return `${EVENTS[eventKey].sheetPrefix} ${year} - RegBudg Calc`;
+}
+
 // Channel column layout in Weekly Tracker (0-indexed):
 // Col 0: Weeks To Go | Col 1: W/C | Col 2: % of Target
 // Col 3: 2024 Cumul | Col 4: 2024 Weekly
@@ -641,7 +654,12 @@ async function loadBudgetTabWithYear(eventKey, year) {
   destroyChart('budget-cpa-chart');
 
   try {
-    const sheetName = `${EVENTS[eventKey].sheetPrefix} ${year} - RegBudg Calc`;
+    const sheetName = getBudgetSheetName(eventKey, year);
+    if (!sheetName) {
+      setError('budget-error', `No budget sheet available for ${eventKey} ${year}`);
+      setLoading('budget-loading', false);
+      return;
+    }
     const rows = await fetchSheet(sheetName, 'A1:G25');
 
     // Find header row (Channel, Budget, ...)
