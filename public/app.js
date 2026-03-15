@@ -152,19 +152,24 @@ function setError(id, msg) {
 
 // Find the latest week's row that has actual data (not ONSITE row)
 function getLatestDataRow(rows) {
-  // rows are newest-first after the 3 header rows
-  for (const row of rows) {
+  // rows sorted oldest-first (highest weeks-to-go first); iterate backward to get most recent week
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const row = rows[i];
     const weeksToGo = row[0];
     const wc = row[1];
     const actual = num(row[7]);
     if (wc && actual > 0 && String(weeksToGo) !== '-1') return row;
   }
-  return rows[0] || [];
+  return rows[rows.length - 1] || [];
 }
 
 // ── WEEKLY TRACKER PARSER ────────────────────
 async function loadWeeklyTracker(eventKey, year = '2025') {
-  const sheetName = `${EVENTS[eventKey].sheetPrefix} ${year} - Weekly Tracker`;
+  // OHEC 2026 sheet is named 'OHE 2026 - Weekly Tracker' (no C)
+  const prefix = (eventKey === 'OHEC' && year === '2026')
+    ? 'OHE'
+    : EVENTS[eventKey].sheetPrefix;
+  const sheetName = `${prefix} ${year} - Weekly Tracker`;
   const rows = await fetchSheet(sheetName, 'A1:AZ1020');
   // Skip 3 header rows
   const dataRows = rows.slice(3).filter(r => r && r[1] && r[7] !== undefined);
